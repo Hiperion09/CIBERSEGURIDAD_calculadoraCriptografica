@@ -470,7 +470,10 @@ if opciones_1 == '1. Operaciones matematicas modulares':
         b = st.number_input('Escribe un numero', value=49)
         resuldado_1, resuldado_2 = calcular_mcd_opc_1_1(a,b)
         st.write(f'El inverso multiplicativo es: ', resuldado_1)
-        
+        if resuldado_1 == 1:
+            st.write("El inverso multiplicativo existe")
+        else:
+            st.write("El inverso multiplicativo no existe")
     elif opciones_1_1 == '1.5 Calcular inverso multiplicativo por metodo tradicional visto en clase':
         st.divider()
         st.subheader('Metodo tradicional Inverso Multiplicativo')
