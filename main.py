@@ -4,6 +4,7 @@ import string
 import random
 import hashlib
 import base64
+ 
 
 st.title(" Calculadora Criptografica ")
 
@@ -127,24 +128,43 @@ def descifrado_cesar_opc_2_2(texto_cifrado, desplazamiento):
     return cifrado_cesar_opc_2_2(texto_cifrado, -desplazamiento)
 
 # ---------------   Cifrado vernam   ---------------------------
-def generar_clave_vernam_opc_2_2(longitud):
-    clave = []
-    for _ in range(longitud):
-        clave.append(random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
-    return ''.join(clave)
+def vernam_cifrar_opc_2_2(mensaje, clave):
+    mensaje_cifrado = ""
+    
+    for i in range(len(mensaje)):
+        # Obtén el carácter del mensaje y el carácter de la clave en sus respectivas posiciones
+        caracter_mensaje = mensaje[i]
+        caracter_clave = clave[i % len(clave)]  # Reutiliza la clave ciclicamente
+        
+        # Aplica la operación XOR entre los caracteres
+        resultado_xor = ord(caracter_mensaje) ^ ord(caracter_clave)
+        
+        # Convierte el resultado de la operación XOR a un carácter imprimible
+        caracter_cifrado = chr(resultado_xor)
+        
+        mensaje_cifrado += caracter_cifrado
+    
+    return mensaje_cifrado
 
-def cifrar_vernam_opc_2_2(texto, clave):
-    texto_cifrado = []
-    for i in range(len(texto)):
-        char_texto = texto[i]
-        char_clave = clave[i]
-        # Realiza la operación XOR para cifrar
-        char_cifrado = chr(ord(char_texto) ^ ord(char_clave))
-        texto_cifrado.append(char_cifrado)
-    return ''.join(texto_cifrado)
+def vernam_descifrar_opc_2_2(mensaje_cifrado, clave):
+    mensaje_descifrado = ""
+    
+    for i in range(len(mensaje_cifrado)):
+        # Obtén el carácter del mensaje cifrado y el carácter de la clave en sus respectivas posiciones
+        caracter_cifrado = mensaje_cifrado[i]
+        caracter_clave = clave[i % len(clave)]  # Reutiliza la clave ciclicamente
+        
+        # Aplica la operación XOR entre los caracteres
+        resultado_xor = ord(caracter_cifrado) ^ ord(caracter_clave)
+        
+        # Convierte el resultado de la operación XOR a un carácter imprimible
+        caracter_descifrado = chr(resultado_xor)
+        
+        mensaje_descifrado += caracter_descifrado
+    
+    return mensaje_descifrado
 
-def descifrar_vernam_opc_2_2(texto_cifrado, clave):
-    return cifrar_vernam_opc_2_2(texto_cifrado, clave)  # El cifrado Vernam es su propio descifrado
+
 # ---------------   Cifrado atbash   ---------------------------
 def cifrar_atbash_opc_2_2(texto):
     texto_cifrado = ""
@@ -273,87 +293,35 @@ def calcular_clave_compartida_opc_3_3(base, modulo, exponente):
 
 # ---------------   RSA  ---------------------------
 # Función para verificar si un número es primo
-def es_primo_opc_3_3(numero):
-    if numero <= 1:
+def es_primo(num):
+    if num <= 1:
         return False
-    if numero <= 3:
-        return True
-    if numero % 2 == 0 or numero % 3 == 0:
-        return False
-    i = 5
-    while i * i <= numero:
-        if numero % i == 0 or numero % (i + 2) == 0:
+    for i in range(2, int(num ** 0.5) + 1):
+        if num % i == 0:
             return False
-        i += 6
     return True
 
-# Función para encontrar el máximo común divisor (MCD) usando el algoritmo de Euclides extendido
-def encontrar_mcdRSA_opc_3_3(a, b):
-    if b == 0:
-        return a
-    else:
-        return encontrar_mcdRSA_opc_3_3(b, a % b)
+# Función para calcular el máximo común divisor (MCD) de dos números
+def mcd(a, b):
+    while b:
+        a, b = b, a % b
+    return a
 
-# Función para encontrar el inverso modular usando el algoritmo de Euclides extendido
-def encontrar_inverso_modularRSA_opc_3_3(a, m):
-    m0, x0, x1 = m, 0, 1
-    while a > 1:
-        q = a // m
-        m, a = a % m, m
-        x0, x1 = x1 - q * x0, x0
-    return x1 % m0
+# Función para calcular el inverso multiplicativo modular
+def inverso_multiplicativo(a, m):
+    g, x, y = extended_gcd(a, m)
+    if g != 1:
+        raise Exception('El inverso multiplicativo no existe')
+    return x % m
 
-# Función para generar un par de claves RSA
-def generar_clavesRSA_opc_3_3():
-    # Elegir dos números primos grandes
-    p = 101
-    q = 2971
-    while not (es_primo_opc_3_3(p) and es_primo_opc_3_3(q)):
-        p = random.randint(100, 1000)
-        q = random.randint(100, 1000)
-
-    # Calcular n (el producto de p y q)
-    n = p * q
-
-    # Calcular la función phi de Euler (φ(n))
-    phi = (p - 1) * (q - 1)
-
-    # Elegir un número entero e que sea coprimo con φ(n)
-    e = random.randint(2, phi - 1)
-    while encontrar_mcdRSA_opc_3_3(e, phi) != 1:
-        e = random.randint(2, phi - 1)
-
-    # Calcular el inverso modular de e
-    d = encontrar_inverso_modularRSA_opc_3_3(e, phi)
-
-    # Clave pública (e, n) y clave privada (d, n)
-    clave_publica = (e, n)
-    clave_privada = (d, n)
-
-    return clave_publica, clave_privada
-
-# Función para cifrar un mensaje (texto o número) usando la clave pública
-def cifrarRSA_opc_3_3(mensaje, clave_publica):
-    e, n = clave_publica
-    if isinstance(mensaje, int):
-        mensaje_cifrado = pow(mensaje, e, n)
-    elif isinstance(mensaje, str):
-        mensaje_cifrado = [pow(ord(char), e, n) for char in mensaje]
-    else:
-        raise ValueError("El mensaje debe ser un entero o una cadena de texto")
-    return mensaje_cifrado
-
-# Función para descifrar un mensaje cifrado usando la clave privada
-def descifrarRSA_opc_3_3(mensaje_cifrado, clave_privada):
-    d, n = clave_privada
-    if isinstance(mensaje_cifrado, int):
-        mensaje_descifrado = pow(mensaje_cifrado, d, n)
-    elif isinstance(mensaje_cifrado, list):
-        mensaje_descifrado = [chr(pow(char, d, n)) for char in mensaje_cifrado]
-        mensaje_descifrado = ''.join(mensaje_descifrado)
-    else:
-        raise ValueError("El mensaje cifrado debe ser un entero o una lista de enteros")
-    return mensaje_descifrado
+# Algoritmo extendido de Euclides para calcular el inverso multiplicativo
+def extended_gcd(a, b):
+    x0, x1, y0, y1 = 1, 0, 0, 1
+    while b:
+        q, a, b = a // b, b, a % b
+        x0, x1 = x1, x0 - q * x1
+        y0, y1 = y1, y0 - q * y1
+    return a, x0, y0
     
 
 # ---------------   Exponenciacion rapida  ---------------------------
@@ -544,10 +512,10 @@ elif opciones_1 == '2. Criptografia Clasica':
         st.divider()
         st.subheader('Cifrado Vernam')
         texto_original_1 = st.text_input('Escribe un mensaje', 'HELLO WORLD')
-        clave_1 = generar_clave_vernam_opc_2_2(len(texto_original_1))
-        texto_cifrado_1 = cifrar_vernam_opc_2_2(texto_original_1, clave_1)
+        clave_1 = st.text_input('Escribe una clave', 'KEY')
+        texto_cifrado_1 = vernam_cifrar_opc_2_2(texto_original_1, clave_1)
         st.write("Texto cifrado:", texto_cifrado_1)
-        texto_descifrado_1 = descifrar_vernam_opc_2_2(texto_cifrado_1, clave_1)
+        texto_descifrado_1 = vernam_descifrar_opc_2_2(texto_cifrado_1, clave_1)
         st.write("Texto descifrado:", texto_descifrado_1)
         
     elif opciones_2_2 == '2.4 cifrado ATBASH':
@@ -601,13 +569,13 @@ elif opciones_1 == '3. Criptografia Moderna':
         st.subheader('Algoritmo de Diffie Hellman')
         
         st.caption('Valores compartidos públicamente (normalmente se acuerdan de antemano)')
-        modulo_primo = st.number_input('Ingresa el valor de P (Modulo):', value=1999)
+        modulo_primo = st.number_input('Ingresa el valor de P (cuerpo):', value=1999)
         base = st.number_input('Ingresa el valor del generador α:', value=33)
         
         st.caption('Generar claves privadas aleatorias para ambas partes')
-        clave_privada_Phineas = st.number_input('Ingresa el valor de la clave privada de Phineas:', value=47)
-        clave_privada_Ferb = st.number_input('Ingresa el valor de la clave privada de Ferb:', value=117)
-        
+        clave_privada_Phineas = st.number_input('Ingresa el valor de la clave privada de Phineas (a):', value=47)
+        clave_privada_Ferb = st.number_input('Ingresa el valor de la clave privada de Ferb (b):', value=117)
+        st.write("Se calcula α^a mod p y  α^b mod p")
         # Calcular las claves públicas de ambas partes
         clave_publica_Phineas = calcular_clave_compartida_opc_3_3(base, modulo_primo, clave_privada_Phineas)
         clave_publica_Ferb = calcular_clave_compartida_opc_3_3(base, modulo_primo, clave_privada_Ferb)
@@ -622,33 +590,36 @@ elif opciones_1 == '3. Criptografia Moderna':
     elif opciones_3_3 == '3.2 Calcular RSA':
         st.divider()
         st.subheader('Algoritmo RSA')
-        msj_numero_1 = st.number_input('Ingresa un numero:', value=1441)
-        msj_texto_1 = st.text_input('Escribe un mensaje secreto', 'Hola, este es un mensaje secreto')
+        p = st.number_input('Ingresa un numero primo:', value=101)
+        q = st.number_input('Ingresa un numero primo:', value=2971)
+        mensaje_original = st.number_input('Ingresa un numero para cifrar:', value=1441)
         
-        # Generar un par de claves RSA
-        clave_publica, clave_privada = generar_clavesRSA_opc_3_3()
+        # Verificar si p y q son primos
+        if not (es_primo(p) and es_primo(q)):
+            raise Exception('Ambos números deben ser primos')
+
+        # Calcular n y phi(n)
+        n = p * q
+        phi_n = (p - 1) * (q - 1)
+
+        # Elegir un número e coprimo con phi(n)
+        e = random.randint(2, phi_n - 1)
+        while mcd(e, phi_n) != 1:
+            e = random.randint(2, phi_n - 1)
+
+        # Calcular el inverso multiplicativo de e modulo phi(n)
+        d = inverso_multiplicativo(e, phi_n)
+
+        # Cifrado
+        mensaje_cifrado = pow(mensaje_original, e, n)
+
+        # Descifrado
+        mensaje_descifrado = pow(mensaje_cifrado, d, n)
         
-        # Cifrar y descifrar texto
-        mensaje_cifrado_texto = cifrarRSA_opc_3_3(msj_texto_1, clave_publica)
-        mensaje_descifrado_texto = descifrarRSA_opc_3_3(mensaje_cifrado_texto, clave_privada)
-        
-        # Cifrar y descifrar números
-        mensaje_cifrado_numero = cifrarRSA_opc_3_3(msj_numero_1, clave_publica)
-        mensaje_descifrado_numero = descifrarRSA_opc_3_3(mensaje_cifrado_numero, clave_privada)
-        
-        st.caption('Claves')
-        st.write('Clave publica: ',clave_publica)
-        st.write('Clave privada: ',clave_privada)
-        
-        st.caption('Mensaje secreto texto')
-        st.write('Mensaje original: ',msj_texto_1)
-        st.write('Mensaje cifrado: ',mensaje_cifrado_texto)
-        st.write('Mensaje descifrado: ',mensaje_descifrado_texto)
-        
-        st.caption('Mensaje secreto numero')
-        st.write('Mensaje original: ',msj_numero_1)
-        st.write('Mensaje cifrado: ',mensaje_cifrado_numero)
-        st.write('Mensaje descifrado: ',mensaje_descifrado_numero)
+        st.caption('Mensajes')
+        st.write('Mensaje original: ',mensaje_original)
+        st.write('Mensaje cifrado: ',mensaje_cifrado)
+        st.write('Mensaje descifrado: ',mensaje_descifrado)
         
     elif opciones_3_3 == '3.3 Calcular Algoritmo de exponenciación rápida':
         st.divider()
@@ -716,7 +687,7 @@ elif opciones_1 == '5. Codificación':
         texto_decodificar = texto_decodificar.replace(" ", "")
         # Decodificar binario a texto
         texto_decodificado = binario_a_texto_opc_5_5(texto_decodificar)
-        st.write('Texto decodificado en binario',texto_decodificado)
+        st.write('Texto decodificado en binario: ',texto_decodificado)
 
     
     elif opciones_5_5 == '3.2 Codificar decodificar hexa':
