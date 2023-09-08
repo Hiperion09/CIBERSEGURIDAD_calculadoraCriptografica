@@ -24,9 +24,10 @@ def xor_inverso_opc_1_1(valor, clave):
     return resultado_xor, resultado_inverso
 
 def calcular_mcd_opc_1_1(a, b):
+    original_a = a  # Guarda una copia de 'a' para devolverla al final
     while b:
         a, b = b, a % b
-    return a
+    return a, original_a // a  # Devuelve el MCD y el valor del MCD
 
 def euclides_extendido_opc_1_1(a, b):
     tabla = []
@@ -467,11 +468,8 @@ if opciones_1 == '1. Operaciones matematicas modulares':
         st.subheader('Maximo Comun Divisor')
         a = st.number_input('Escribe un numero', value=15)
         b = st.number_input('Escribe un numero', value=49)
-        resuldado_1 = calcular_mcd_opc_1_1(a,b)
-        if resuldado_1 == 1:
-            st.write(f'El inverso multiplicativo existe entre {a} y {b}')
-        else:
-            st.write(f'El inverso multiplicativo no existe entre {a} y {b}')
+        resuldado_1, resuldado_2 = calcular_mcd_opc_1_1(a,b)
+        st.write(f'El inverso multiplicativo es: ', resuldado_1)
         
     elif opciones_1_1 == '1.5 Calcular inverso multiplicativo por metodo tradicional visto en clase':
         st.divider()
